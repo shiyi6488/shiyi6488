@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>游戏账号交易系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.page{display:none;}
+.page.active{display:block;}
+.fixed-filter{position:sticky;top:0;z-index:40;background:#fff;padding:1rem;border-radius:1rem;margin-bottom:1rem;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+.hide{display:none!important;}
+.comment-item{font-size:12px;background:#f3f4f6;padding:4px 8px;border-radius:4px;margin-top:4px;}
+.comment-input{width:100%;border:1px solid #eee;border-radius:4px;padding:4px 8px;font-size:12px;margin-top:6px;}
+.date-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.date-filter button{padding:4px 10px;border-radius:4px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:12px;}
+.date-filter button.active{background:#3b82f6;color:white;border-color:#3b82f6;}
+.group-img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;background:#f5f5f5;border-radius:8px;}
+
+@media (max-width:768px){
+  .fixed-filter{
+    position:sticky;
+    top:110px !important;
+    z-index:39 !important;
+  }
+  body{
+    padding-bottom:20px;
+  }
+}
+</style>
+</head>
+<body class="bg-gray-100 m-0 p-0">
+
+<div class="fixed top-0 left-0 right-0 z-50">
+  <div class="bg-yellow-400 text-red-600 text-center font-bold py-2 text-lg">账号寄售联系十壹V：shiyi6488</div>
+  <div class="flex bg-white text-sm border-b">
+    <button onclick="go(1)" class="flex-1 py-3 text-blue-600 font-bold" id="n1">征服专区</button>
+    <button onclick="go(2)" class="flex-1 py-3 text-gray-600" id="n2">试师专区</button>
+    <button onclick="go(3)" class="flex-1 py-3 text-gray-600" id="n3">讨论区</button>
+    <button onclick="go(4)" class="flex-1 py-3 text-gray-600" id="n4">号查查</button>
+    <button onclick="go(5)" class="flex-1 py-3 text-gray-600" id="n5">我的</button>
+  </div>
+</div>
+
+<div class="page active pt-[110px]" id="page1">
+  <div class="max-w-6xl mx-auto p-4">
+    <div class="fixed-filter">
+      <h3 class="font-bold mb-2">征服专区筛选</h3>
+      <div class="date-filter" id="date1">
+        <button class="active" data-range="all">全部</button>
+        <button data-range="today">今天</button>
+        <button data-range="week">本周</button>
+        <button data-range="month">本月</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <input id="p1min" type="number" placeholder="最低价" class="border p-2 rounded">
+        <input id="p1max" type="number" placeholder="最高价" class="border p-2 rounded">
+      </div>
+      <input id="p1kw" placeholder="搜索" class="w-full border p-2 rounded mb-2">
+      <button onclick="renderGoods(1)" class="bg-blue-600 text-white p-2 rounded w-full">筛选</button>
+    </div>
+    <div id="list1" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+  </div>
+</div>
+
+<div class="page pt-[110px]" id="page2">
+  <div class="max-w-6xl mx-auto p-4">
+    <div class="fixed-filter">
+      <h3 class="font-bold mb-2">试师专区筛选</h3>
+      <div class="date-filter" id="date2">
+        <button class="active" data-range="all">全部</button>
+        <button data-range="today">今天</button>
+        <button data-range="week">本周</button>
+        <button data-range="month">本月</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <input id="p2min" type="number" placeholder="最低价" class="border p-2 rounded">
+        <input id="p2max" type="number" placeholder="最高价" class="border p-2 rounded">
+      </div>
+      <input id="p2kw" placeholder="搜索" class="w-full border p-2 rounded mb-2">
+      <button onclick="renderGoods(2)" class="bg-blue-600 text-white p-2 rounded w-full">筛选</button>
+    </div>
+    <div id="list2" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+  </div>
+</div>
+
+<div class="page pt-[110px]" id="page3">
+  <div class="max-w-5xl mx-auto p-4">
+    <div class="bg-white p-4 rounded shadow mb-4">
+      <h3 class="font-bold mb-2">讨论区（可发图）</h3>
+      <textarea id="chatContent" maxlength="500" placeholder="说点什么（500字内）" rows="3" class="w-full border p-2 rounded mb-2"></textarea>
+      <div class="flex gap-2 mb-2">
+        <button onclick="document.getElementById('chatImg').click()" class="flex-1 bg-purple-600 text-white p-2 rounded">上传图片</button>
+        <button onclick="sendChat()" class="flex-1 bg-green-600 text-white p-2 rounded">发布</button>
+        <input type="file" id="chatImg" class="hide" accept="image/*">
+      </div>
+    </div>
+
+    <div class="fixed-filter">
+      <h3 class="font-bold text-sm mb-2">讨论区筛选</h3>
+      <div class="flex flex-wrap gap-2 mb-2">
+        <input id="chatDateFilter" placeholder="日期（如：3/19）" class="border p-2 rounded flex-1 min-w-[120px]">
+        <input id="chatKeywordFilter" placeholder="关键词搜索" class="border p-2 rounded flex-1 min-w-[120px]">
+        <button onclick="renderChat()" class="bg-blue-600 text-white px-3 py-2 rounded">搜索</button>
+        <button onclick="clearChatFilter()" class="bg-gray-500 text-white px-3 py-2 rounded">重置</button>
+      </div>
+    </div>
+
+    <div id="chatList" class="space-y-4"></div>
+  </div>
+</div>
+
+<div class="page pt-[110px]" id="page4">
+  <div class="max-w-5xl mx-auto p-4 space-y-4">
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="font-bold mb-2">号查查</h3>
+      <input id="checkLink" placeholder="粘贴账号链接查询" class="w-full border p-2 rounded mb-2">
+      <button onclick="doCheck()" class="bg-blue-600 text-white p-2 rounded w-full">查询</button>
+      <div id="checkResult" class="mt-3 text-center font-bold text-lg"></div>
+      <div id="accountInfo" class="mt-4 p-3 bg-gray-50 rounded text-left hide"></div>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="font-bold mb-2">征服交流群</h3>
+      <button id="g1btn" class="bg-purple-600 text-white px-3 py-1 rounded hide">上传群图片</button>
+      <input type="file" id="g1up" class="hide" accept="image/*">
+      <div id="g1list" class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3"></div>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="font-bold mb-2">试师交流群</h3>
+      <button id="g2btn" class="bg-purple-600 text-white px-3 py-1 rounded hide">上传群图片</button>
+      <input type="file" id="g2up" class="hide" accept="image/*">
+      <div id="g2list" class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3"></div>
+    </div>
+  </div>
+</div>
+
+<div class="page pt-[110px]" id="page5">
+  <div class="max-w-6xl mx-auto p-4">
+    <div class="bg-white p-4 rounded shadow mb-4">
+      <div id="loginArea">
+        <h3 class="font-bold mb-2 text-center">用户登录</h3>
+        <input id="loginUser" placeholder="用户名" class="w-full border p-2 rounded mb-2">
+        <input id="loginPwd" type="password" placeholder="密码" class="w-full border p-2 rounded mb-2">
+        <div class="flex gap-2">
+          <button onclick="login()" class="flex-1 bg-blue-600 text-white p-2 rounded">登录</button>
+          <button onclick="showReg()" class="flex-1 bg-gray-600 text-white p-2 rounded">注册</button>
+        </div>
+      </div>
+
+      <div id="regArea" class="hide">
+        <h3 class="font-bold mb-2 text-center">用户注册</h3>
+        <input id="regUser" placeholder="用户名" class="w-full border p-2 rounded mb-2">
+        <input id="regPwd" type="password" placeholder="密码" class="w-full border p-2 rounded mb-2">
+        <div class="flex gap-2">
+          <button onclick="register()" class="flex-1 bg-green-600 text-white p-2 rounded">注册</button>
+          <button onclick="showLogin()" class="flex-1 bg-gray-600 text-white p-2 rounded">返回</button>
+        </div>
+      </div>
+
+      <div id="userArea" class="hide text-center">
+        <h3 class="font-bold mb-2">欢迎，<span id="uname"></span></h3>
+        <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded m-1">退出登录</button>
+        <div id="addAdminArea" class="mt-3 hide">
+          <input id="newAdminUser" placeholder="子管理员账号" class="border p-1 rounded w-24">
+          <input id="newAdminPwd" placeholder="密码" type="password" class="border p-1 rounded w-24">
+          <button onclick="addSubAdmin()" class="bg-blue-600 text-white p-1 rounded text-xs ml-1">添加子管理员</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow mb-4">
+      <h3 class="font-bold mb-2 text-red-500">发布账号</h3>
+      <div class="mb-2">
+        <label class="mr-3"><input type="radio" name="type" value="征服" checked>征服</label>
+        <label class="mr-3"><input type="radio" name="type" value="试师">试师</label>
+      </div>
+      <input id="price" type="number" placeholder="价格（只能填数字）" class="w-full border p-2 rounded mb-2">
+      <input id="link" placeholder="账号链接" class="w-full border p-2 rounded mb-2">
+      <textarea id="intro" placeholder="账号介绍（粘贴后自动提取链接）" rows="4" class="w-full border p-2 rounded mb-2"></textarea>
+      <input id="contact" placeholder="联系方式" class="w-full border p-2 rounded mb-2">
+      <button onclick="publishGood()" class="bg-green-600 text-white p-2 rounded w-full">发布账号</button>
+    </div>
+
+    <div id="myGoods" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+  </div>
+</div>
+
+<div id="editModal" class="fixed inset-0 bg-black/50 hide items-center justify-center z-50">
+  <div class="bg-white p-5 rounded w-full max-w-md">
+    <h3 class="font-bold mb-3">编辑账号</h3>
+    <input type="hidden" id="eid">
+    <div class="mb-2">
+      <label class="mr-3"><input type="radio" name="etype" value="征服">征服</label>
+      <label><input type="radio" name="etype" value="试师">试师</label>
+    </div>
+    <input id="eprice" type="number" class="w-full border p-2 rounded mb-2" placeholder="价格">
+    <input id="elink" class="w-full border p-2 rounded mb-2" placeholder="链接">
+    <textarea id="eintro" rows="2" class="w-full border p-2 rounded mb-2" placeholder="介绍"></textarea>
+    <input id="econtact" class="w-full border p-2 rounded mb-2" placeholder="联系方式">
+    <div class="flex gap-2">
+      <button onclick="saveEdit()" class="flex-1 bg-blue-600 text-white p-2 rounded">保存</button>
+      <button onclick="closeEdit()" class="flex-1 bg-gray-600 text-white p-2 rounded">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function $(id) { return document.getElementById(id); }
+const ADMIN_USER = "admin";
+const ADMIN_PWD = "848788++";
+
+let currentUser = null;
+let goods = JSON.parse(localStorage.getItem("goods")) || [];
+let group1 = JSON.parse(localStorage.getItem("group1")) || [];
+let group2 = JSON.parse(localStorage.getItem("group2")) || [];
+let chats = JSON.parse(localStorage.getItem("chats")) || [];
+let comments = JSON.parse(localStorage.getItem("comments")) || [];
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let subAdmins = JSON.parse(localStorage.getItem("subAdmins")) || [];
+
+let dateFilter1 = "all";
+let dateFilter2 = "all";
+
+function syncAll() {
+  localStorage.setItem("goods", JSON.stringify(goods));
+  localStorage.setItem("group1", JSON.stringify(group1));
+  localStorage.setItem("group2", JSON.stringify(group2));
+  localStorage.setItem("chats", JSON.stringify(chats));
+  localStorage.setItem("comments", JSON.stringify(comments));
+  localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("subAdmins", JSON.stringify(subAdmins));
+}
+
+function saveCurrentUser(user) {
+  currentUser = user;
+  localStorage.setItem("currentUser", user ? JSON.stringify(user) : "");
+}
+
+function getCurrentUser() {
+  const u = localStorage.getItem("currentUser");
+  return u ? JSON.parse(u) : null;
+}
+
+function isSuperAdmin() {
+  return currentUser?.username === ADMIN_USER;
+}
+function isSubAdmin() {
+  return subAdmins.some(s => s.username === currentUser?.username);
+}
+function isAdminUser() {
+  return isSuperAdmin() || isSubAdmin();
+}
+
+function go(idx) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll("[id^='n']").forEach(n => {
+    n.classList.remove("text-blue-600", "font-bold");
+    n.classList.add("text-gray-600");
+  });
+  $("page" + idx).classList.add("active");
+  $("n" + idx).classList.add("text-blue-600", "font-bold");
+  renderAll();
+}
+
+function time(t) { return new Date(t).toLocaleString(); }
+
+function autoExtractLinkFromIntro(text) {
+  const regex = /https?:\/\/[^\s]+/g;
+  const match = text.match(regex);
+  return match ? match[0] : "";
+}
+document.getElementById("intro").addEventListener("input", function() {
+  if (!isAdminUser()) return;
+  const link = autoExtractLinkFromIntro(this.value);
+  if (link) $("link").value = link;
+});
+
+function clearChatFilter() {
+  $("chatDateFilter").value = "";
+  $("chatKeywordFilter").value = "";
+  renderChat();
+}
+
+document.querySelectorAll("#date1 button").forEach(btn => {
+  btn.onclick = () => {
+    dateFilter1 = btn.dataset.range;
+    document.querySelectorAll("#date1 button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderGoods(1);
+  };
+});
+document.querySelectorAll("#date2 button").forEach(btn => {
+  btn.onclick = () => {
+    dateFilter2 = btn.dataset.range;
+    document.querySelectorAll("#date2 button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderGoods(2);
+  };
+});
+
+function inDateRange(timestamp, range) {
+  const now = Date.now();
+  const oneDay = 86400000;
+  if (range === "today") return now - timestamp < oneDay;
+  if (range === "week") return now - timestamp < oneDay * 7;
+  if (range === "month") return now - timestamp < oneDay * 30;
+  return true;
+}
+
+function renderGoods(type) {
+  const key = type === 1 ? "征服" : "试师";
+  const min = +$("p"+type+"min").value || 0;
+  const max = +$("p"+type+"max").value || 9999999;
+  const kw = ($("p"+type+"kw").value || "").toLowerCase();
+  const currentDateFilter = type === 1 ? dateFilter1 : dateFilter2;
+
+  let list = goods.filter(g => {
+    if (g.type !== key) return false;
+    if (!inDateRange(g.createTime, currentDateFilter)) return false;
+    if (Number(g.price || 0) < min) return false;
+    if (Number(g.price || 0) > max) return false;
+    if (kw && !(g.intro || "").toLowerCase().includes(kw)) return false;
+    return true;
+  });
+
+  const showOperate = isSuperAdmin();
+  $("list"+type).innerHTML = list.map(g => `
+  <div class="bg-white p-4 rounded shadow relative">
+    <div class="font-bold text-lg">${g.type}</div>
+    <div class="text-green-600 font-bold text-xl">${g.price ? '¥'+g.price : '无价格'}</div>
+    <div class="text-sm text-gray-600 my-1">${g.intro || '无介绍'}</div>
+    <div class="text-xs text-gray-400">${time(g.createTime)}</div>
+    ${isSuperAdmin() && g.contact ? `<div class="text-blue-600 text-sm my-1">联系方式：${g.contact}</div>` : ""}
+    ${g.link ? `<a href="${g.link}" target="_blank" class="text-xs bg-blue-500 text-white px-2 py-1 rounded inline-block mt-1">查看账号</a>` : ""}
+    ${showOperate ? `
+    <div class="mt-2 flex gap-2">
+      <button onclick="editGood(${g.id})" class="text-xs bg-yellow-500 text-white px-2 py-1 rounded">编辑</button>
+      <button onclick="delGood(${g.id})" class="text-xs bg-red-500 text-white px-2 py-1 rounded">删除</button>
+    </div>
+    ` : ""}
+  </div>
+  `).join("") || '<div class="p-4 text-center bg-white rounded">暂无账号</div>';
+}
+
+function publishGood() {
+  if (!currentUser) { alert("请先登录！"); go(5); return; }
+  const isAdmin = isAdminUser();
+  
+  let type = document.querySelector('input[name="type"]:checked').value;
+  let price = $("price").value.trim();
+  let link = $("link").value.trim();
+  let intro = $("intro").value.trim();
+  let contact = $("contact").value.trim();
+
+  if (!isAdmin) {
+    if (!price || !link || !intro || !contact) { alert("请填写完整信息！"); return; }
+    if (isNaN(price) || price.length > 7) { alert("价格必须是7位内数字！"); return; }
+  }
+
+  let item = { 
+    id: Date.now(), 
+    user: currentUser.username, 
+    type, price, link, intro, contact, 
+    createTime: Date.now() 
+  };
+  goods.unshift(item);
+  syncAll();
+  $("price").value = $("link").value = $("intro").value = $("contact").value = "";
+  renderGoods(1); renderGoods(2); renderMy();
+  alert("发布成功！");
+}
+
+function editGood(id) {
+  if (!isSuperAdmin()) { alert("无权限"); return; }
+  const g = goods.find(x => x.id === id);
+  if (!g) return;
+  $("eid").value = g.id;
+  document.querySelector(`input[name="etype"][value="${g.type}"]`).checked = true;
+  $("eprice").value = g.price;
+  $("elink").value = g.link;
+  $("eintro").value = g.intro;
+  $("econtact").value = g.contact;
+  $("editModal").classList.remove("hide");
+  $("editModal").style.display = "flex";
+}
+
+function saveEdit() {
+  if (!isSuperAdmin()) return;
+  const id = +$("eid").value;
+  const type = document.querySelector('input[name="etype"]:checked').value;
+  const price = $("eprice").value.trim();
+  const link = $("elink").value.trim();
+  const intro = $("eintro").value.trim();
+  const contact = $("econtact").value.trim();
+  const i = goods.findIndex(x => x.id === id);
+  if (i === -1) return;
+  goods[i] = { ...goods[i], type, price, link, intro, contact };
+  syncAll();
+  closeEdit();
+  renderGoods(1); renderGoods(2); renderMy();
+  alert("保存成功！");
+}
+
+function closeEdit() {
+  $("editModal").classList.add("hide");
+  $("editModal").style.display = "none";
+}
+
+function delGood(id) {
+  if (!isSuperAdmin()) { alert("仅超级管理员可删除"); return; }
+  if (!confirm("确定删除该账号？")) return;
+  goods = goods.filter(x => x.id !== id);
+  syncAll();
+  renderGoods(1); renderGoods(2); renderMy();
+}
+
+function renderMy() {
+  if (!currentUser) {
+    $("myGoods").innerHTML = '<div class="p-4 text-center bg-white rounded">请登录查看我的发布</div>';
+    return;
+  }
+  const myList = goods.filter(item => item.user === currentUser.username);
+  $("myGoods").innerHTML = myList.map(g => `
+  <div class="bg-white p-4 rounded shadow">
+    <div class="font-bold">${g.type}</div>
+    <div class="text-green-600 font-bold">${g.price ? '¥'+g.price : '无价格'}</div>
+    <div class="text-sm text-gray-500">${g.intro || '无介绍'}</div>
+    <div class="text-xs text-gray-400">${time(g.createTime)}</div>
+  </div>
+  `).join("") || '<div class="p-4 text-center bg-white rounded">暂无发布</div>';
+}
+
+function sendChat() {
+  if (!currentUser) { alert("请登录"); return; }
+  const content = $("chatContent").value.trim();
+  if (!content || content.length > 500) { alert("内容不能为空且500字以内"); return; }
+  const file = $("chatImg").files[0];
+  if (!file) { saveChat(content, ""); return; }
+  const reader = new FileReader();
+  reader.onload = () => saveChat(content, reader.result);
+  reader.readAsDataURL(file);
+}
+
+function saveChat(content, img) {
+  const item = { 
+    id: Date.now(), 
+    user: currentUser.username, 
+    content, img, time: Date.now() 
+  };
+  chats.unshift(item);
+  syncAll();
+  $("chatContent").value = "";
+  $("chatImg").value = "";
+  renderChat();
+}
+
+function sendComment(chatId) {
+  if (!currentUser) { alert("请先登录"); return; }
+  const inp = $("comment_input_" + chatId);
+  const txt = inp.value.trim();
+  if (!txt) return;
+  comments.push({
+    id: Date.now(),
+    chatId: chatId,
+    user: currentUser.username,
+    content: txt,
+    time: Date.now()
+  });
+  inp.value = "";
+  syncAll();
+  renderChat();
+}
+
+function renderChat() {
+  const showDel = isSuperAdmin();
+  const dateFilter = $("chatDateFilter").value.trim();
+  const keywordFilter = $("chatKeywordFilter").value.trim().toLowerCase();
+
+  let filtered = [...chats];
+
+  if (dateFilter) {
+    filtered = filtered.filter(c => {
+      const d = new Date(c.time);
+      const mon = d.getMonth() + 1;
+      const day = d.getDate();
+      const chatDateStr = `${mon}/${day}`;
+      return chatDateStr === dateFilter;
+    });
+  }
+
+  if (keywordFilter) {
+    filtered = filtered.filter(c => 
+      c.content.toLowerCase().includes(keywordFilter) || 
+      c.user.toLowerCase().includes(keywordFilter)
+    );
+  }
+
+  let html = "";
+  filtered.forEach(c => {
+    let cs = comments.filter(x => x.chatId === c.id);
+    let cmts = cs.map(k => `<div class="comment-item"><b>${k.user}</b>：${k.content}</div>`).join("");
+    html += `
+    <div class="bg-white p-3 rounded shadow relative">
+      <div class="flex justify-between text-sm mb-1">
+        <span class="font-bold">${c.user}</span>
+        <span class="text-gray-400 text-xs">${time(c.time)}</span>
+      </div>
+      <div class="mb-2">${c.content}</div>
+      ${c.img ? `<img src="${c.img}" class="max-h-60 rounded max-w-full mb-2">` : ""}
+      <div class="pt-2">${cmts}</div>
+      <input id="comment_input_${c.id}" placeholder="发表评论..." class="comment-input" onkeydown="if(event.key==='Enter')sendComment(${c.id})">
+      ${showDel ? `<button onclick="delChat(${c.id})" class="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs">×</button>` : ""}
+    </div>`;
+  });
+  $("chatList").innerHTML = html || '<div class="p-3 text-center bg-white rounded">暂无帖子</div>';
+}
+
+function delChat(id) {
+  if (!isSuperAdmin()) return;
+  if (!confirm("确定删除该帖子？")) return;
+  chats = chats.filter(x => x.id !== id);
+  comments = comments.filter(x => x.chatId !== id);
+  syncAll();
+  renderChat();
+}
+
+function doCheck() {
+  const link = $("checkLink").value.trim();
+  if (!link) { alert("请输入账号链接"); return; }
+  const inputPrefix = link.slice(0, 74);
+  const found = goods.find(g => g.link && g.link.slice(0,74) === inputPrefix);
+  
+  if (!found) {
+    $("checkResult").innerText = "❌ 该账号未收录";
+    $("checkResult").style.color = "red";
+    $("accountInfo").classList.add("hide");
+    return;
+  }
+
+  $("checkResult").innerText = "✅ 该账号已收录";
+  $("checkResult").style.color = "green";
+  const contactHtml = isSuperAdmin() && found.contact ? `<div>联系方式：${found.contact}</div>` : "";
+  
+  $("accountInfo").innerHTML = `
+    <div><strong>类型：</strong>${found.type}</div>
+    <div><strong>价格：</strong>${found.price ? '¥'+found.price : '无价格'}</div>
+    <div><strong>介绍：</strong>${found.intro || '无介绍'}</div>
+    <div><strong>发布时间：</strong>${time(found.createTime)}</div>
+    ${contactHtml}
+  `;
+  $("accountInfo").classList.remove("hide");
+}
+
+function renderGroup() {
+  const showUpload = isSuperAdmin();
+  $("g1btn").classList.toggle("hide", !showUpload);
+  $("g2btn").classList.toggle("hide", !showUpload);
+
+  $("g1list").innerHTML = group1.map((item, i) => `
+  <div class="relative">
+    <img src="${item}" class="group-img">
+    ${showUpload ? `<button onclick="delGroup(1,${i})" class="absolute top-1 right-1 w-6 h-5 bg-black/50 text-white rounded-full text-xs">×</button>` : ""}
+  </div>
+  `).join("");
+
+  $("g2list").innerHTML = group2.map((item, i) => `
+  <div class="relative">
+    <img src="${item}" class="group-img">
+    ${showUpload ? `<button onclick="delGroup(2,${i})" class="absolute top-1 right-1 w-6 h-5 bg-black/50 text-white rounded-full text-xs">×</button>` : ""}
+  </div>
+  `).join("");
+}
+
+$("g1btn").onclick = () => { if(isSuperAdmin()) $("g1up").click(); };
+$("g1up").onchange = (e) => {
+  const f = e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{group1.unshift(r.result);syncAll();renderGroup();$g1up.value="";};
+  r.readAsDataURL(f);
+};
+
+$("g2btn").onclick = () => { if(isSuperAdmin()) $("g2up").click(); };
+$("g2up").onchange = (e) => {
+  const f = e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{group2.unshift(r.result);syncAll();renderGroup();$g2up.value="";};
+  r.readAsDataURL(f);
+};
+
+function delGroup(g,i){
+  if(!isSuperAdmin())return;
+  g===1?group1.splice(i,1):group2.splice(i,1);
+  syncAll();renderGroup();
+}
+
+function addSubAdmin() {
+  if (!isSuperAdmin()) { alert("无权限"); return; }
+  const user = $("newAdminUser").value.trim();
+  const pwd = $("newAdminPwd").value.trim();
+  if (!user || !pwd) { alert("请输入账号密码"); return; }
+  if (subAdmins.some(s => s.username === user)) { alert("已存在"); return; }
+  subAdmins.push({ username: user, password: pwd });
+  syncAll();
+  alert("子管理员添加成功！");
+  $("newAdminUser").value = "";
+  $("newAdminPwd").value = "";
+}
+
+function showReg(){$("loginArea").classList.add("hide");$("regArea").classList.remove("hide");$("userArea").classList.add("hide");}
+function showLogin(){$("loginArea").classList.remove("hide");$("regArea").classList.add("hide");$("userArea").classList.add("hide");}
+function showUserInfo(name){
+  $("loginArea").classList.add("hide");
+  $("regArea").classList.add("hide");
+  $("userArea").classList.remove("hide");
+  $("uname").innerText = name;
+  $("addAdminArea").classList.toggle("hide", !isSuperAdmin());
+}
+
+function register(){
+  const user=$("regUser").value.trim();const pwd=$("regPwd").value.trim();
+  if(!user||!pwd){alert("请输入用户名和密码");return;}
+  if(users.some(u=>u.username===user)){alert("用户名已存在");return;}
+  users.push({username:user,password:pwd});syncAll();alert("注册成功！请登录");showLogin();
+}
+
+function login(){
+  const user=$("loginUser").value.trim();const pwd=$("loginPwd").value.trim();
+  if(!user||!pwd){alert("请输入账号和密码");return;}
+
+  if(user===ADMIN_USER && pwd===ADMIN_PWD){
+    saveCurrentUser({username:ADMIN_USER});
+    showUserInfo(user);
+    alert("超级管理员登录成功！");
+    renderAll();
+    return;
+  }
+
+  const sub = subAdmins.find(s=>s.username===user&&s.password===pwd);
+  if(sub){
+    saveCurrentUser({username:user});
+    showUserInfo(user);
+    alert("子管理员登录成功！");
+    renderAll();
+    return;
+  }
+
+  const target = users.find(u=>u.username===user&&u.password===pwd);
+  if(!target){alert("账号或密码错误");return;}
+  saveCurrentUser(target);
+  showUserInfo(target.username);
+  alert("登录成功！");
+  renderAll();
+}
+
+function renderAll(){
+  renderMy();
+  renderGroup();
+  renderGoods(1);
+  renderGoods(2);
+  renderChat();
+}
+
+function logout(){
+  saveCurrentUser(null);
+  showLogin();
+  alert("已退出登录");
+  renderAll();
+}
+
+window.onload = function () {
+  currentUser = getCurrentUser();
+  if (currentUser) {
+    showUserInfo(currentUser.username);
+  } else {
+    showLogin();
+  }
+  renderAll();
+};
+</script>
+</body>
+</html>
